@@ -7,9 +7,25 @@ ifeq ($(OS), Linux)
 	LIB+= -lm
 endif
 ifeq ($(OS), Darwin)
-	OPT+= -I/usr/local/include  -Wall -g
+	OPT+= -I/usr/local/include -Wall -g
 	PREDEF+= -D_APPLE
 	LIB+= -L/usr/local/lib
+endif
+
+ifeq ($(OUTPUT), 1)
+	PREDEF+= -DOUTPUT
+endif
+
+ifeq ($(COLLISION_DEBUG), 1)
+	PREDEF+= -DCOLLISION_DEBUG
+endif
+
+ifeq ($(USEGLUT), 1)
+ifeq ($(OPENGL), 0)
+	OPENGL=1
+endif
+	PREDEF+= -DUSEGLUT
+	OPT+= -Wno-deprecated	
 endif
 
 ifeq ($(MPI), 1)
@@ -26,12 +42,15 @@ ifeq ($(FFTW), 1)
 endif
 
 ifeq ($(OPENGL), 1)
-PREDEF+= -DOPENGL
+	PREDEF+= -DOPENGL
 ifeq ($(OS), Darwin)
-	LIB+= -framework OpenGL -framework GLUT
+	LIB+= -framework OpenGL -framework GLUT 
+	LIB+= -framework IOKit -framework Carbon -framework Cocoa -framework CoreVideo -lglfw3
 else
-	LIB+= -lGL -lGLU -lglut 
+	LIB+= -lGL -lGLU -lglut
 endif
+
+LIB+= -lglfw3
 
 ifeq ($(LIBPNG), 1)
 	PREDEF+= -DLIBPNG
@@ -47,6 +66,10 @@ ifeq ($(PROFILING), 1)
 	PREDEF+= -DPROFILING
 endif
 
+ifeq ($(OUTPUT), 1)
+	PREDEF+= -DOUTPUT
+endif
+
 ifeq ($(OPENMP), 1)
 	PREDEF+= -DOPENMP
 ifeq ($(CC), icc)
@@ -60,7 +83,6 @@ else
 	OPT+= -Wno-unknown-pragmas
 endif
 
-OPT += -Wno-deprecated
 
 # Create precompiler definitions from links
 PREDEF+= -D$(shell basename `readlink gravity.c` '.c' | tr '[a-z]' '[A-Z]')
@@ -69,6 +91,11 @@ PREDEF+= -D$(shell basename `readlink boundaries.c` '.c' | tr '[a-z]' '[A-Z]')
 PREDEF+= -D$(shell basename `readlink collisions.c` '.c' | tr '[a-z]' '[A-Z]')
 
 PREDEFLIST= $(shell echo "$(PREDEF)" | sed 's/-D//g')
+
+OBJECTS_NBODY += main.o problem.o tree.o particle.o gravity.o
+OBJECTS_NBODY += integrator.o boundaries.o input.o output.o collisions.o
+OBJECTS_NBODY += collision_resolve.o communication_mpi.o input_params.o
+OBJECTS_NBODY += zpr.o display.o visualization.o tools.o 
 
 all:
 	$(CC) $(OPT) $(PREDEF) main.c -c
@@ -79,14 +106,16 @@ all:
 	$(CC) $(OPT) $(PREDEF) integrator.c -c
 	$(CC) $(OPT) $(PREDEF) boundaries.c -c
 	$(CC) $(OPT) $(PREDEF) input.c -c
+	$(CC) $(OPT) $(PREDEF) input_params.c -c
 	$(CC) $(OPT) $(PREDEF) output.c -c
 	$(CC) $(OPT) $(PREDEF) collisions.c -c
 	$(CC) $(OPT) $(PREDEF) collision_resolve.c -c
 	$(CC) $(OPT) $(PREDEF) communication_mpi.c -c
 	$(CC) $(OPT) $(PREDEF) zpr.c -c
 	$(CC) $(OPT) $(PREDEF) display.c -c
+	$(CC) $(OPT) $(PREDEF) visualization.c -c
 	$(CC) $(OPT) $(PREDEF) tools.c -c
-	$(CC) *.o -o nbody $(LIB)
+	$(CC) $(OBJECTS_NBODY) -o nbody $(LIB)
 
 clean:
 	rm -vf *.o
