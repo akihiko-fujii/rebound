@@ -1,7 +1,11 @@
 PROBLEMDIR=$(shell basename `dirname \`pwd\``)"/"$(shell basename `pwd`)
+export PROFILING=0
 export OPT=-O3 
 export OPENGL=1
 export LIBPNG=0
+export OUTPUT=1
+export USEGLUT=1
+export MPI=0
 
 all:
 	# Setup link to different modules
@@ -15,10 +19,14 @@ all:
 	$(MAKE) -C ../../src/
 	# Copy result
 	cp ../../src/nbody .
-
+	$(MAKE) -C ./p2d/
+	cp ./p2d/*.out .
+	rm ./p2d/*.out
 doc: all
 	$(MAKE) -C ../../src/ doc
 
 clean:
 	$(MAKE) -C ../../src/ clean
+	$(MAKE) -C ./p2d/ clean
 	rm -vf nbody
+	rm *.outg

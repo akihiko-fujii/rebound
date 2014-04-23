@@ -40,9 +40,8 @@
 #include "tree.h"
 #include "tools.h"
 #include "display.h"
-#include "input_params.h"
 
-double OMEGA;
+extern double OMEGA;
 extern double minimum_collision_velocity;
 
 extern double (*coefficient_of_restitution_for_velocity)(double); 
@@ -51,7 +50,7 @@ double coefficient_of_restitution_bridges(double v);
 double collisions_constant_coefficient_of_restitution_for_velocity(double v);
 
 extern double constant_coefficient_of_restitution;
-double opening_angle2;
+extern double opening_angle2;
 
 // http://stackoverflow.com/questions/15767691/whats-the-c-library-function-to-generate-random-string
 
@@ -93,13 +92,12 @@ void problem_init(int argc, char* argv[]){
   root_nx = 2; root_ny = 2; root_nz = 1;
   nghostx = 2; nghosty = 2; nghostz = 0; 			// Use two ghost rings
 
-  double surfacedensity 	= 840.; 			// kg/m^2
+  double surfacedensity 	= 580.; 			// kg/m^2
   double particle_density	= 900.;			// kg/m^3
   double particle_radius_min 	= 1.;			// m
   double particle_radius_max 	= 1.;			// m
   double particle_radius_slope 	= -3.;	
-  boxsize 			= 83./2.;			// m
- 
+  boxsize 			= 100.;			// m
   if (argc>1){						// Try to read boxsize from command line
     boxsize = atof(argv[1]);
   }
@@ -121,7 +119,7 @@ void problem_init(int argc, char* argv[]){
   */
   coefficient_of_restitution_for_velocity	= collisions_constant_coefficient_of_restitution_for_velocity;
   boxinfo.collisions_restitution_model_info	= ENUMCOLLISIONS_CONSTANT_COEFFICIENT_OF_RESTITUTION_FOR_VELOCITY;
-  constant_coefficient_of_restitution = 0.5;
+  constant_coefficient_of_restitution = 0.1;
   /* end. */
 
   boxinfo.boxsize_x = boxsize_x;
@@ -158,20 +156,16 @@ void problem_init(int argc, char* argv[]){
   }
 
   // Optical depth
-  printf("Optical depth: %f\n", crosssection()/(boxsize_x*boxsize_y));
+  printf("Optical depth: %f\n", tools_crosssection()/(boxsize_x*boxsize_y));
 
   // generate simulation id 
   simulation_id = calloc(7, sizeof(char));
   generate_simulation_id(simulation_id,7);
   printf("simulation_id=%s\n", simulation_id); 
 
-  static char *datadir_path;
-  datadir_path = getenv("REBOUND_DATA");
   /* prepare data directory */
   char *dirname = calloc(1024, sizeof(char));
-  /* sprintf(dirname, "../restarting_simulation/data/%s",simulation_id); */
-  sprintf(dirname, "%s/%s",datadir_path,simulation_id);
-  printf("dirname=%s\n", dirname);
+  sprintf(dirname, "../restarting_simulation/data/%s",simulation_id);
 
   struct stat st = {0};
 
@@ -219,21 +213,18 @@ void problem_output(){
     /* printf("cofficient of restitution:%d %lf", ENUMCOLLISIONS_CONSTANT_COEFFICIENT_OF_RESTITUTION_FOR_VELOCITY,constant_coefficient_of_restitution); */
     /* printf("boxinfo:%lf %lf %lf\n", boxinfo.boxsize_x,boxinfo.boxsize_y,boxinfo.boxsize_z); */
 
-    static char *datadir_path;
-    datadir_path = getenv("REBOUND_DATA");    
-
     char *o = calloc(1024, sizeof(char));
 
-    sprintf(o,"%s/%s/snapshots/%010.2f[orb].binall",
-	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA));
+    sprintf(o,"../restarting_simulation/data/%s/snapshots/%010.2f[orb].binall",
+	    simulation_id,t/(2.*M_PI/OMEGA));
     output_binary_all(o);
 
-    sprintf(o,"%s/%s/snapshots/%010.2f[orb].bin",
-	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA));
+    sprintf(o,"../restarting_simulation/data/%s/snapshots/%010.2f[orb].bin",
+	    simulation_id,t/(2.*M_PI/OMEGA));
     output_binary(o);
 
-    sprintf(o,"%s/%s/snapshots/%010.2f[orb].ascii",
-	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA));
+    sprintf(o,"../restarting_simulation/data/%s/snapshots/%010.2f[orb].ascii",
+	    simulation_id,t/(2.*M_PI/OMEGA));
     output_ascii(o);
 
     free(o);
