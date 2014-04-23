@@ -74,10 +74,10 @@ int* 		tree_essential_recv_Nmax;
 
 
 void communication_mpi_init(int argc, char** argv){
+
 	MPI_Init(&argc,&argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&mpi_num);
 	MPI_Comm_rank(MPI_COMM_WORLD,&mpi_id);
-	
 	
 	// Setup MPI description of the particle structure 
 	int bnum = 0;

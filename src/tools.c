@@ -39,7 +39,6 @@ double tools_uniform(double min, double max){
 	return ((double)rand())/((double)(RAND_MAX))*(max-min)+min;
 }
 
-
 double tools_powerlaw(double min, double max, double slope){
 	double y = tools_uniform(0., 1.);
 	return pow( (pow(max,slope+1.)-pow(min,slope+1.))*y+pow(min,slope+1.), 1./(slope+1.));
@@ -239,3 +238,4 @@ struct orbit tools_p2orbit(struct particle p, struct particle star){
 
 	return o;
 }
+

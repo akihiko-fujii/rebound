@@ -50,7 +50,7 @@ struct collision{
 	int ri;	 		/**< Index of rootcell (Needed for MPI). */
 } collision;
 
-extern double coefficient_of_restitution;	/**< Constant coefficient of restitution. Only used when coefficient_of_restitution_for_velocity not set by user. */
+extern double constant_coefficient_of_restitution;	/**< Constant coefficient of restitution. Only used when coefficient_of_restitution_for_velocity not set by user. */
 extern double minimum_collision_velocity;	/**< Minimal collision velocity. Needed to avoid particles slowly sinking into each other while constantly touching each other. */
 extern double (*coefficient_of_restitution_for_velocity) (double); /**< Function pointer to a function that returns the coefficient of restitution as a function of velocity. */
 
@@ -60,12 +60,7 @@ extern double (*coefficient_of_restitution_for_velocity) (double); /**< Function
  * @param c Collision to resolve.
  */
 void collision_resolve_hardsphere_original(struct collision c);	
-
-/**
- * Resolve a single collision assuming a hardsphere collision model (no super-particle).
- * @param c Collision to resolve.
- */
-void collision_resolve_hardsphere_pullaway(struct collision c);	
+void collision_resolve_hardsphere_revised(struct collision c);	
 
 /**
  * Function pointer to collision resolve function. 

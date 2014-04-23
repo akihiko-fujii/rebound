@@ -30,12 +30,10 @@
 #include <string.h>
 #include <sys/time.h>
 #include "particle.h"
-#include "collision_resolve.h"
 #include "main.h"
 #include "tools.h"
 #include "output.h"
 #include "input.h"
-#include "collision_resolve.h"
 #include "communication_mpi.h"
 #ifdef OPENGL
 #include "display.h"
@@ -63,10 +61,12 @@ int output_check(double interval){
 }
 
 int output_check_phase(double interval,double phase){
+
 	double shift = t+interval*phase;
 	if (floor(shift/interval)!=floor((shift-dt)/interval)){
 		return 1;
 	}
+
 	// Output at beginning or end of simulation
 	if (t==0||t==tmax){
 		return 1;
@@ -132,8 +132,7 @@ void output_timing(){
 #endif // BOUNDARIES_SHEAR
 	printf("cpu= %- 9f [s]  ",temp-output_timing_last);
 	if (tmax>0){
-	  /* printf("ttttt:%lf\n", t);exit(1); */
-	  printf("dt:%lf t:%lf,tmax:%lf\n,t/tmax= %5.2f%%",dt,t,tmax,t/tmax*100.0);
+	  printf("tmax=%.2f(s), t/tmax= %5.2f%%",tmax,t/tmax*100.0);
 	}
 #ifdef PROFILING
 	printf("\nCATEGORY       TIME \n");
@@ -195,22 +194,25 @@ void output_append_ascii(char* filename){
 
 void output_ascii(char* filename){
 #ifdef MPI
-	char filename_mpi[1024];
-	sprintf(filename_mpi,"%s_%d",filename,mpi_id);
-	FILE* of = fopen(filename_mpi,"w"); 
+  char filename_mpi[1024];
+  sprintf(filename_mpi,"%s_%d",filename,mpi_id);
+  FILE* of = fopen(filename_mpi,"w"); 
 #else // MPI
-	FILE* of = fopen(filename,"w"); 
+  FILE* of = fopen(filename,"w"); 
 #endif // MPI
-	if (of==NULL){
-		printf("\n\nError while opening file '%s'.\n",filename);
-		return;
-	}
-	fprintf(of, "# x\ty\tz\tvx\tvy\tvz\n");
-	for (int i=0;i<N;i++){
-		struct particle p = particles[i];
-		fprintf(of,"%e\t%e\t%e\t%e\t%e\t%e\n",p.x,p.y,p.z,p.vx,p.vy,p.vz);
-	}
-	fclose(of);
+  if (of==NULL){
+    printf("\n\nError while opening file '%s'.\n",filename);
+    return;
+  }
+
+  fprintf(of,"# N,t: \n%d\t%e\n",N,t);
+  fprintf(of,"# p.x\tp.y\tp.z\tp.vx\tp.vy\tp.vz\n");
+
+  for (int i=0;i<N;i++){
+    struct particle p = particles[i];
+    fprintf(of,"%e\t%e\t%e\t%e\t%e\t%e\n",p.x,p.y,p.z,p.vx,p.vy,p.vz);
+  }
+  fclose(of);
 }
 
 void output_append_orbits(char* filename){
@@ -258,23 +260,33 @@ void output_orbits(char* filename){
 
 void output_binary(char* filename){
 #ifdef MPI
-	char filename_mpi[1024];
-	sprintf(filename_mpi,"%s_%d",filename,mpi_id);
-	FILE* of = fopen(filename_mpi,"wb"); 
+  char filename_mpi[1024];
+  sprintf(filename_mpi,"%s_%d",filename,mpi_id);
+  FILE* of = fopen(filename_mpi,"wb"); 
 #else // MPI
-	FILE* of = fopen(filename,"wb"); 
+  FILE* of = fopen(filename,"wb"); 
 #endif // MPI
-	if (of==NULL){
-		printf("\n\nError while opening file '%s'.\n",filename);
-		return;
-	}
-	fwrite(&N,sizeof(int),1,of);
-	fwrite(&t,sizeof(double),1,of);
-	for (int i=0;i<N;i++){
-		struct particle p = particles[i];
-		fwrite(&(p),sizeof(struct particle),1,of);
-	}
-	fclose(of);
+  if (of==NULL){
+    printf("\n\nError while opening file '%s'.\n",filename);
+    return;
+  }
+  fseek(of, 0, SEEK_SET);
+  fwrite(&N,sizeof(int),1,of);
+
+  fseek(of, sizeof(int), SEEK_SET);
+  fwrite(&t,sizeof(double),1,of);
+
+  for (int i=0;i<N;i++){
+    struct particle p = particles[i];
+    fseek(of, sizeof(int)+sizeof(double)+i*sizeof(struct particle), SEEK_SET);
+
+    if(i<10){
+      printf("primary:N,t:%d %lf p.xyz:%lf %lf %lf\n",N,t,p.x,p.y,p.z);
+      printf("i:%d size(p):%ld before reading p:%ld\n",i,sizeof(struct particle), ftell(of));
+    }
+    fwrite(&(p),sizeof(struct particle),1,of);
+  }
+  fclose(of);
 }
 
 void output_binary_positions(char* filename){
@@ -297,60 +309,6 @@ void output_binary_positions(char* filename){
 		fwrite(&(v),sizeof(struct vec3),1,of);
 	}
 	fclose(of);
-}
-
-void boxinfo_prepare(){
-
-  boxinfo.boxsize_x				= boxsize_x;
-  boxinfo.boxsize_y				= boxsize_y;
-  boxinfo.boxsize_z				= boxsize_z;
-  boxinfo.G					= G;
-  boxinfo.dt					= dt;
-  boxinfo.N					= N;
-  boxinfo.softening				= softening;
-#ifdef INTEGRATOR_SEI 	// Shearing sheet
-  boxinfo.OMEGA					= OMEGA;
-#endif
-  boxinfo.constant_coefficient_of_restitution = constant_coefficient_of_restitution;
-  /* boxinfo.surfacedensity			= surfacedensity; */
-  /* boxinfo.particle_density			= particle_density; */
-  /* boxinfo.particle_radius_min			= particle_radius_min; */
-  /* boxinfo.particle_radius_max			= particle_radius_max; */
-  /* boxinfo.particle_radius_slope			= particle_radius_slope; */
-  /* boxinfo.coefficient_of_restitution_strlen	= strlen(); */
-}
-
-void output_binary_all(char* filename){
-
-#ifdef MPI
-  char filename_mpi[1024];
-  sprintf(filename_mpi,"%s_%d",filename,mpi_id);
-  FILE* of = fopen(filename_mpi,"wb"); 
-#else // MPI
-  FILE* of = fopen(filename,"wb"); 
-#endif // MPI
-
-  /* write both particle structure & boxinfo structure. */
-  /* (future task) */
-  boxinfo_prepare();
-
-  printf("opening file:%s\n",filename);
-
-  if (of==NULL){
-    printf("\n\nError while opening file '%s'.\n",filename);
-    return;
-  }
-  fwrite(&N,sizeof(int),1,of);
-  fwrite(&t,sizeof(double),1,of);
-  for (int i=0;i<N;i++){
-    struct particle p = particles[i];
-    fwrite(&(p),sizeof(struct particle),1,of);
-  }
-
-  /* printf("outputting:boxinfo box:%lf %lf %lf\n", boxinfo.boxsize_x,boxinfo.boxsize_y,boxinfo.boxsize_z); */
-  fwrite(&(boxinfo),sizeof(struct boxinfo),1,of);
-
-  fclose(of);
 }
 
 void output_append_velocity_dispersion(char* filename){

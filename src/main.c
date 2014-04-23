@@ -22,6 +22,11 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+/*
+ This is a test.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,7 +45,14 @@
 #include "main.h"
 #include "communication_mpi.h"
 #ifdef OPENGL
+#ifdef USEGLUT
 #include "display.h"
+#else // USEGLUT
+#include <GLFW/glfw3.h>
+#include <OpenGL/glext.h>
+#include <OpenGL/gl3ext.h>
+#include "visualization.h"
+#endif // USEGLUT
 #endif // OPENGL
 #ifdef OPENMP
 #include <omp.h>
@@ -51,8 +63,8 @@ void gravity_finish();
 
 double softening 	= 0;
 double G		= 1;
-double t		= 0;
-double tmax		= 0; 
+double t		= 0.;
+double tmax		= 0.; 
 double dt 		= 0.001;
 double timing_initial 	= -1;
 int    exit_simulation	= 0;
@@ -67,9 +79,16 @@ int root_ny		= 1;
 int root_nz		= 1;
 int root_n		= 1;
 
+char* simulation_id;
+
 void (*problem_additional_forces) () = NULL;
 
 static char* 	logo[];		/**< Logo of rebound. */
+#ifdef OPENGL
+#ifndef USEGLUT
+float *points;
+#endif
+#endif
 
 void init_boxwidth(double _boxwidth){
 	boxsize = _boxwidth;
@@ -115,6 +134,10 @@ void init_box(){
 }
 
 void iterate(){	
+
+  /* printf("\nN:%d boxinfo.N:%d\n",N,boxinfo.N); */
+  /* printf("boxinfo.box:%lf %lf %lf\n",boxinfo.boxsize_x,boxinfo.boxsize_y,boxinfo.boxsize_z); */
+
 	// A 'DKD'-like integrator will do the first 'D' part.
 	PROFILING_START()
 	integrator_part1();
@@ -124,8 +147,8 @@ void iterate(){
 	PROFILING_START()
 	boundaries_check();     
 	PROFILING_STOP(PROFILING_CAT_BOUNDARY)
-
 	// Update and simplify tree. 
+
 	// Prepare particles for distribution to other nodes. 
 	// This function also creates the tree if called for the first time.
 	PROFILING_START()
@@ -141,8 +164,8 @@ void iterate(){
 #ifdef GRAVITY_TREE
 	// Update center of mass and quadrupole moments in tree in preparation of force calculation.
 	tree_update_gravity_data(); 
-	
 #ifdef MPI
+
 	// Prepare essential tree (and particles close to the boundary needed for collisions) for distribution to other nodes.
 	tree_prepare_essential_tree_for_gravity();
 
@@ -174,7 +197,7 @@ void iterate(){
 
 	// Search for collisions using local and essential tree.
 	PROFILING_START()
-	collisions_search();
+	  collisions_search();
 
 	// Resolve collisions (only local particles are affected).
 	collisions_resolve();
@@ -182,19 +205,27 @@ void iterate(){
 #endif  // COLLISIONS_NONE
 
 #ifdef OPENGL
+#ifdef USEGLUT
 	PROFILING_START()
 	display();
 	PROFILING_STOP(PROFILING_CAT_VISUALIZATION)
+#endif // USEGLUT
 #endif // OPENGL
+
 	problem_output();
+
 	// Check if the simulation finished.
 #ifdef MPI
 	int _exit_simulation = 0;
 	MPI_Allreduce(&exit_simulation, &_exit_simulation,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
 	exit_simulation = _exit_simulation;
 #endif // MPI
+
+	/* printf("t:%lf exit_simulation=%d\n",t,exit_simulation); exit(1); */
+
 	// @TODO: Adjust timestep so that t==tmax exaclty at the end.
 	if((t+dt>tmax && tmax!=0.0) || exit_simulation==1){
+
 #ifdef GRAVITY_GRAPE
 		gravity_finish();
 #endif // GRAVITY_GRAPE
@@ -226,41 +257,79 @@ void interruptHandler(int var) {
 	interrupt_counter++;
 }
 
+#ifdef OPENGL
+#ifndef USEGLUT
+
+GLFWwindow *window1, *window2;
+#endif // USEGLUT
+#endif // OPENGL
+
 int main(int argc, char* argv[]) {
+
 #ifdef MPI
-	communication_mpi_init(argc,argv);
-	// Print logo only on main node.
-	if (mpi_id==0){
+  /* printf("this is mpi.\n");exit(0); */
+  communication_mpi_init(argc,argv);
+  // Print logo only on main node.
+  if (mpi_id==0){
 #endif // MPI
-		int i=0;
-		while (logo[i]!=NULL){ printf("%s",logo[i++]); }
+    int i=0;
+    while (logo[i]!=NULL){ printf("%s",logo[i++]); }
 #ifdef MPI
-		printf("Using MPI with %d nodes.\n",mpi_num);
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
+    printf("Using MPI with %d nodes.\n",mpi_num);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
 #endif // MPI
 #ifdef OPENMP
-	printf("Using OpenMP with %d threads per node.\n",omp_get_max_threads());
+  printf("Using OpenMP with %d threads per node.\n",omp_get_max_threads());
 #endif // OPENMP
-	// Store time to calculate total runtime.
-	struct timeval tim;
-	gettimeofday(&tim, NULL);
-	timing_initial = tim.tv_sec+(tim.tv_usec/1000000.0);
-	// Initialiase interrupts, random numbers, problem, box and OpengL
-	signal(SIGINT, interruptHandler);
-	signal(SIGKILL, interruptHandler);
-	srand ( tim.tv_usec + getpid());
-	problem_init(argc, argv);
-	problem_output();
+  // Store time to calculate total runtime.
+  struct timeval tim;
+  gettimeofday(&tim, NULL);
+  timing_initial = tim.tv_sec+(tim.tv_usec/1000000.0);
+  // Initialiase interrupts, random numbers, problem, box and OpengL
+  signal(SIGINT, interruptHandler);
+  signal(SIGKILL, interruptHandler);
+  srand ( tim.tv_usec + getpid());
+  problem_init(argc, argv);
+  problem_output();
+
+  /* printf("hogehoge"); */
+  /* exit(1); */
+  /* printf("particles[0]:%lf %lf %lf\n", particles[0].x,particles[0].y,particles[0].z); */
+  /* printf("%s:N:%d boxsize:%lf %lf %lf\n",__func__,N,boxsize_x,boxsize_y,boxsize_z);  */
+
 #ifdef OPENGL
-	display_init(argc, argv);
+#ifdef USEGLUT
+  display_init(argc, argv);
+#else // USEGLUT
+  initialize_glfw();
+
+  while (!glfwWindowShouldClose(window1))
+    {
+      iterate();
+
+      glClear(GL_COLOR_BUFFER_BIT);
+
+      glUseProgram(shader_program);
+
+      draw_particles();
+
+      glfwSwapBuffers(window1);
+
+      glfwPollEvents();
+
+    }
+
+  glfwTerminate();
+
+#endif // USEGLUT
 #else // OPENGL
-	while(1){
-		// Main run loop.
-		iterate();
-	}
+  while(1){
+  // Main run loop.
+  iterate();
+}
 #endif // OPENGL
-	return 0;
+  return 0;
 }
 
 

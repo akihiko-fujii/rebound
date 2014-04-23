@@ -43,6 +43,13 @@ struct orbit {
 
 
 /**
+ * Calculates the cross section. 
+ * (Used to compute dynamical optical depth, particle overlap ignored)
+ */
+
+double tools_crosssection();
+
+/**
  * Calculates a random variable in a given range.
  * @param min Minimum value.
  * @param max Maximum value.
@@ -101,5 +108,9 @@ void tools_move_to_center_of_momentum();
  * Returns the center of mass of particle p1 and p2.
  */
 struct particle tools_get_center_of_mass(struct particle p1, struct particle p2);
+
+double tools_crosssection();
+
+double tools_surfacedensity();
 
 #endif 	// TOOLS_H

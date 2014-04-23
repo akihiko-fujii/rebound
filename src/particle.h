@@ -55,6 +55,32 @@ struct particle {
 #endif // TREE
 };
 
+enum collisions_restitution_model{
+  ENUMCOLLISIONS_CONSTANT_COEFFICIENT_OF_RESTITUTION_FOR_VELOCITY,
+  ENUMCOLLISIONS_COEFFICIENT_OF_RESTITUTION_BRIDGES,
+};
+
+/**
+ * Parameters needed for restart.
+ */
+struct boxinfo
+{
+	 double boxsize_x;
+	 double boxsize_y;
+	 double boxsize_z;
+	 double G;
+	 double dt;
+	 int N;
+	 double softening;
+#ifdef INTEGRATOR_SEI 	// Shearing sheet
+	 double OMEGA;
+#endif
+  enum collisions_restitution_model collisions_restitution_model_info;
+  double constant_coefficient_of_restitution; /* if constant */
+
+}boxinfo;
+
+
 /**
  * Main particle array.
  * This contains all particles on this node.

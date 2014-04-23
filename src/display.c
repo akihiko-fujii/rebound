@@ -69,6 +69,8 @@ double display_rotate_x = 0;	/**< Rotate everything around the x-axis. */
 double display_rotate_z = 0;	/**< Rotate everything around the z-axis. */
 #define DEG2RAD (M_PI/180.)
 
+#ifdef USEGLUT
+
 /**
  * This function is called when the user presses a key. 
  * @param key Character pressed.
@@ -330,9 +332,11 @@ void display(){
 }
 
 void display_init(int argc, char* argv[]){
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
-	glutInitWindowSize(700,700);
+	glutInitWindowSize(500,500);
+	glutInitWindowPosition(50,100);
 	glutCreateWindow("rebound");
 	zprInit(0.85/boxsize_max);
 	glutDisplayFunc(display);
@@ -378,3 +382,5 @@ void display_init(int argc, char* argv[]){
 }
 
 #endif // OPENGL
+
+#endif // USEGLUT

@@ -29,10 +29,12 @@
 #include <time.h>
 #include <getopt.h>
 #include <string.h>
-#include "particle.h"
 #include "main.h"
 #include "input.h"
+#include "particle.h"
+#include "tools.h"
 #include "communication_mpi.h"
+#include "input_params.h"
 
 char input_arguments[4096]; // This is a bit of an arbitrary number. Should be dynamic.
 
@@ -55,38 +57,58 @@ void input_append_input_arguments_with_double(const char* argument, double value
 }
 
 int input_check_restart(int argc, char** argv){
-	char filename[1024];
-	int restart = 0;
-	opterr = 0;
-	optind = 1;
-  	while (1) {
-      		static struct option long_options[] = {
-	  		{"restart", required_argument, 0, 'r'},
-			{0,0,0,0}
-		};
 
-      		/* getopt_long stores the option index here.   */
-      		int option_index = 0;
-		//				short options. format abc:d::
-      		int c = getopt_long (argc, argv, "", long_options, &option_index);
+  char directoryname[1024];
+  char datafilename[1024];
+  char name[1024];
+  int restart = 0;
+  opterr = 0;
+  optind = 1;
 
-      		/* Detect the end of the options.   */
-      		if (c == -1) break;
+  static char *datadir_path;
+  datadir_path = getenv("REBOUND_DATA");
 
-      		switch (c)
-		{
-			case 'r':
-				restart = 1;
-				strcpy(filename, optarg);
-				break;
-			default:
-				break;
-		}
-  	}
-	if (restart==1){
-		input_binary(filename);
-	}
-	return restart;
+  while (1) {
+    static struct option long_options[] = {
+      {"restart", required_argument, 0, 'r'},
+      {"id_simulation_model", required_argument, 0, 'i'},
+      {0,0,0,0}
+    };
+
+    /* getopt_long stores the option index here.   */
+    int option_index = 0;
+    //				short options. format abc:d::
+    int c = getopt_long (argc, argv, "r:i:", long_options, &option_index);
+
+    /* Detect the end of the options.   */
+    if (c == -1) break;
+
+    switch (c)
+      {
+      case 'r':
+	restart = 1;
+	strcpy(datafilename, optarg);
+	break;
+      case 'i':
+	restart = 1;
+	sprintf(name, "%s", optarg);
+	
+	sprintf(datafilename, "%s/%s/snapshots/0000000.00[orb].binall",datadir_path,name);
+	sprintf(directoryname, "%s/data/%s",datadir_path,name);
+	/* read_params(datafilename); */
+	input_binary_all(datafilename);
+	/* input_binary(datafilename); */
+	break;
+      default:
+	break;
+      }
+  }
+
+  /* if (restart==1){ */
+  /*   input_binary(datafilename); */
+  /* } */
+
+  return restart;
 }
 
 double input_get_double(int argc, char** argv, const char* argument, double _default){
@@ -140,28 +162,111 @@ char* input_get_argument(int argc, char** argv, const char* argument){
 }
 
 void input_binary(char* filename){
+
+  int filesize = 0;
 #ifdef MPI
-	char filename_mpi[1024];
-	sprintf(filename_mpi,"%s_%d",filename,mpi_id);
-	FILE* inf = fopen(filename_mpi,"rb"); 
+  char filename_mpi[1024];
+  sprintf(filename_mpi,"%s_%d",filename,mpi_id);
+  FILE* inf = fopen(filename_mpi,"rb"); 
 #else // MPI
-	FILE* inf = fopen(filename,"rb"); 
+  FILE* inf = fopen(filename,"rb"); 
 #endif // MPI
-	long objects = 0;
-	int _N;
-	objects += fread(&_N,sizeof(int),1,inf);
-	objects += fread(&t,sizeof(double),1,inf);
+
+  // Get binary file size
+  fseek(inf, 0, SEEK_END); 
+  filesize = ftell(inf); 
+  fseek(inf, 0, SEEK_SET); 
+
+  long objects = 0;
+  int _N;
+
+  objects += fread(&_N,sizeof(int),1,inf);
+  objects += fread(&t,sizeof(double),1,inf);
+
+  // Show warnings when file of binary file is imconpatible. 
+  if(filesize != sizeof(int)+sizeof(double)+_N*sizeof(struct particle)){
+    printf("sizeof(file):%d. sizeof(int)+sizeof(double)+%d*sizeof(particle)=%ld\n",
+	   filesize,_N,sizeof(int)+sizeof(double)+_N*sizeof(struct particle));
+    /* exit_simulation = 1; */
+  }
+
 #ifdef MPI
-	printf("Found %d particles in file '%s'. ",_N,filename_mpi);
+  printf("Found %d particles in file '%s'. ",_N,filename_mpi);
 #else // MPI
-	printf("Found %d particles in file '%s'. ",_N,filename);
+  printf("Found %d particles in file '%s'. ",_N,filename);
 #endif // MPI
-	for (int i=0;i<_N;i++){
-		struct particle p;
-		objects += fread(&p,sizeof(struct particle),1,inf);
-		particles_add(p);
-	}
-	fclose(inf);
-	printf("%ld objects read. Restarting at time t=%f\n",objects,t);
+  for (int i=0;i<_N;i++){
+    struct particle p;
+
+    /* if(i<10){ */
+    /*   printf("i:%d size(p):%ld before reading p:%ld\n",i,sizeof(struct particle), ftell(inf)); */
+    /* } */
+
+    objects += fread(&p,sizeof(struct particle),1,inf);
+    particles_add(p);
+
+  }
+  fclose(inf);
+  printf("%ld objects read. Restarting at time t=%f\n",objects,t);
 }
+
+/* (incomplete) */
+void input_binary_all(char *filename){
+
+  int filesize = 0;
+  FILE* inf = fopen(filename,"rb"); 
+  if(inf==NULL){
+    printf("cannot read %s.end.\n", filename); exit(1);
+  }
+
+  // Get binary file size
+  fseek(inf, 0, SEEK_END); 
+  filesize = ftell(inf); 
+  fseek(inf, 0, SEEK_SET); 
+
+  long objects = 0;
+  int _N;
+  objects += fread(&_N,sizeof(int),1,inf);
+  objects += fread(&t,sizeof(double),1,inf);
+
+  // Show warnings when file of binary file is imconpatible. 
+  if(filesize != sizeof(int)+sizeof(double)+_N*sizeof(struct particle)+sizeof(struct boxinfo)){
+    printf("sizeof(file):%d. sizeof(int)+sizeof(double)+%d*sizeof(particle)=%ld\n",
+	   filesize,_N,sizeof(int)+sizeof(double)+_N*sizeof(struct particle)+sizeof(struct boxinfo));
+    /* exit_simulation = 1; */
+  }
+
+  printf("readinf filename %s. _N:%d N:%d\n",filename,_N,N);
+
+  for (int i=0;i<_N;i++){
+
+    struct particle p;
+
+    /* if(i<10){ */
+    /*   printf("i:%d size(p):%ld before reading p:%ld\n",i,sizeof(struct particle), ftell(inf)); */
+    /* } */
+
+    objects += fread(&p,sizeof(struct particle),1,inf);
+    particles_add(p);
+  }
+
+  printf("ftell:%ld\n", ftell(inf));
+
+  for(int i=0;i<1;i++){
+    printf("particle[%d].xyz:%lf %lf %lf\n", i,particles[i].x,particles[i].y,particles[i].z);
+  }
+
+  fread(&boxinfo,sizeof(struct boxinfo),1,inf);
+
+  fclose(inf);
+
+  boxinfo_expand();  
+
+  printf("hoge:");
+  printf("particles[0]:%lf %lf %lf\n", particles[0].x,particles[0].y,particles[0].z);
+
+  /* printf("function %s incomplete.end.\n", __func__);exit(1); */
+
+}
+
 

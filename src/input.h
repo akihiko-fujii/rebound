@@ -40,6 +40,12 @@ int input_check_restart(int argc, char** argv);
 void input_binary(char* filename);
 
 /**
+ * Reads a binaryall file.
+ * @param filename Filename to be read.
+ */
+void input_binary_all(char* filename);
+
+/**
  * Reads arguments from the command line.
  * @param argc Number of command line arguments.
  * @param argv Array of command line arguments.
@@ -76,3 +82,4 @@ int input_get_int(int argc, char** argv, const char* argument, int _default);
  */
 extern char input_arguments[];
 #endif
+

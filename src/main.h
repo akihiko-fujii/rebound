@@ -30,6 +30,27 @@
 #define M_PI           3.14159265358979323846
 #endif
 
+// http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+
+// http://7ujm.net/etc/esc.html
+#define clr		printf("\033[2J") // Clear display
+#define clr_right		printf("\033[0K") // カーソル位置からその行の右端までをクリア
+#define clr_left		printf("\033[1K") //カーソル位置からその行の左端までをクリア
+#define clr_line		printf("\033[2K") //カーソル位置の行をクリア
+#define location(x,y)	printf("\033[%d;%dH" ,x,y) //カーソル位置を移動
+#define right(x)		printf("\033[%dC" ,x) //カーソルを指定数だけ右に移動
+#define left(x)		printf("\033[%dD" ,x) //カーソルを指定数だけ左に移動
+#define down(x)		printf("\033[%dB" ,x) //カーソルを指定数だけ下に移動
+#define up(x)		printf("\033[%dA" ,x) //カーソルを指定数だけ上に移動
+
 extern double 	softening;	/**< Gravitational softening parameter. Default: 0. */
 extern double 	G;		/**< Gravitational constant. Default: 1. */
 extern double 	t;		/**< Current simulation time. */
@@ -49,6 +70,8 @@ extern double 	boxsize_z;	/**< Size of the entire box in the z direction, root_n
 extern double 	boxsize_max;	/**< Maximum size of the entire box in any direction. Set in box_init().*/
 
 extern double 	timing_initial;	/**< System time at start. Used to meassure total cpu time. */
+
+extern char* 	simulation_id;	/**< Used to identify simulation models. */
 
 
 /**

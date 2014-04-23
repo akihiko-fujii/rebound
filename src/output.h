@@ -81,6 +81,13 @@ void output_append_ascii(char* filename);
  * Dumps all particle structs into a binary file.
  * @param filename Output filename.
  */
+
+void output_binary_all(char* filename);
+/**
+ * Dumps all particle and boxinfo structs into a binary file.
+ * @param filename Output filename.
+ */
+
 void output_binary(char* filename);
 
 /**
