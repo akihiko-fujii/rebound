@@ -50,8 +50,6 @@ else
 	LIB+= -lGL -lGLU -lglut
 endif
 
-LIB+= -lglfw3
-
 ifeq ($(LIBPNG), 1)
 	PREDEF+= -DLIBPNG
 	LIB+= -lpng

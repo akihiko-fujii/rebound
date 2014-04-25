@@ -51,6 +51,7 @@
 #define down(x)		printf("\033[%dB" ,x) //カーソルを指定数だけ下に移動
 #define up(x)		printf("\033[%dA" ,x) //カーソルを指定数だけ上に移動
 
+
 extern double 	softening;	/**< Gravitational softening parameter. Default: 0. */
 extern double 	G;		/**< Gravitational constant. Default: 1. */
 extern double 	t;		/**< Current simulation time. */

@@ -148,7 +148,6 @@ void draw_particles_xy(){
     points[6*i+5] = 0.;
   }
 
-
   glEnable(GL_SCISSOR_TEST);
   glViewport(30,200,350,350);
   glScissor(30,200,350,350);

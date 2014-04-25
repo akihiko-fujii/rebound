@@ -35,6 +35,17 @@ double	tools_normaldistribution2_rsq;		/**< Used for speedup**/
 double 	tools_normaldistribution2_v2;		/**< Used for speedup**/
 int 	tools_normaldistribution2_ready = 0;	/**< Used for speedup**/
 
+double tools_crosssection(){
+
+  double s = 0.;
+
+  for(int i=0;i<N;i++){
+    s += particles[i].r * particles[i].r;
+  }
+  s *= atan(1.)*4.;
+  return s;
+}
+
 double tools_uniform(double min, double max){
 	return ((double)rand())/((double)(RAND_MAX))*(max-min)+min;
 }
@@ -238,4 +249,3 @@ struct orbit tools_p2orbit(struct particle p, struct particle star){
 
 	return o;
 }
-

@@ -135,9 +135,6 @@ void init_box(){
 
 void iterate(){	
 
-  /* printf("\nN:%d boxinfo.N:%d\n",N,boxinfo.N); */
-  /* printf("boxinfo.box:%lf %lf %lf\n",boxinfo.boxsize_x,boxinfo.boxsize_y,boxinfo.boxsize_z); */
-
 	// A 'DKD'-like integrator will do the first 'D' part.
 	PROFILING_START()
 	integrator_part1();
@@ -164,8 +161,8 @@ void iterate(){
 #ifdef GRAVITY_TREE
 	// Update center of mass and quadrupole moments in tree in preparation of force calculation.
 	tree_update_gravity_data(); 
+	
 #ifdef MPI
-
 	// Prepare essential tree (and particles close to the boundary needed for collisions) for distribution to other nodes.
 	tree_prepare_essential_tree_for_gravity();
 
@@ -197,7 +194,7 @@ void iterate(){
 
 	// Search for collisions using local and essential tree.
 	PROFILING_START()
-	  collisions_search();
+	collisions_search();
 
 	// Resolve collisions (only local particles are affected).
 	collisions_resolve();
@@ -220,12 +217,8 @@ void iterate(){
 	MPI_Allreduce(&exit_simulation, &_exit_simulation,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
 	exit_simulation = _exit_simulation;
 #endif // MPI
-
-	/* printf("t:%lf exit_simulation=%d\n",t,exit_simulation); exit(1); */
-
 	// @TODO: Adjust timestep so that t==tmax exaclty at the end.
 	if((t+dt>tmax && tmax!=0.0) || exit_simulation==1){
-
 #ifdef GRAVITY_GRAPE
 		gravity_finish();
 #endif // GRAVITY_GRAPE
@@ -293,11 +286,6 @@ int main(int argc, char* argv[]) {
   problem_init(argc, argv);
   problem_output();
 
-  /* printf("hogehoge"); */
-  /* exit(1); */
-  /* printf("particles[0]:%lf %lf %lf\n", particles[0].x,particles[0].y,particles[0].z); */
-  /* printf("%s:N:%d boxsize:%lf %lf %lf\n",__func__,N,boxsize_x,boxsize_y,boxsize_z);  */
-
 #ifdef OPENGL
 #ifdef USEGLUT
   display_init(argc, argv);
@@ -315,13 +303,12 @@ int main(int argc, char* argv[]) {
       draw_particles();
 
       glfwSwapBuffers(window1);
-
       glfwPollEvents();
 
     }
 
   glfwTerminate();
-
+ 
 #endif // USEGLUT
 #else // OPENGL
   while(1){

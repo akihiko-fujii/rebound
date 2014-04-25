@@ -1,14 +1,14 @@
 PROBLEMDIR=$(shell basename `dirname \`pwd\``)"/"$(shell basename `pwd`)
 export OPENGL=1
 export USEGLUT=1
-export OUTPUT=0
+export COLLISION_DEBUG=1
 
 all:
 	# Setup link to different modules
-	ln -fs gravity_tree.c ../../src/gravity.c
-	ln -fs boundaries_shear.c ../../src/boundaries.c
-	ln -fs integrator_sei.c ../../src/integrator.c
-	ln -fs collisions_tree.c ../../src/collisions.c
+	ln -fs gravity_none.c ../../src/gravity.c
+	ln -fs boundaries_periodic.c ../../src/boundaries.c
+	ln -fs integrator_leapfrog.c ../../src/integrator.c
+	ln -fs collisions_direct.c ../../src/collisions.c
 	# Setup link to problem file
 	ln -fs ../$(PROBLEMDIR)/problem.c ../../src/problem.c
 	# Compile

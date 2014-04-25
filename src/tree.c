@@ -193,7 +193,6 @@ struct cell *tree_update_cell(struct cell *node){
 		if (oldpos<N_tree_fixed){
 			particles_add_fixed(reinsertme,oldpos);
 		}else{
-		  /* printf("N:%d oldpos:%d\n",N,oldpos); */
 			N--;
 			particles[oldpos] = particles[N];
 			particles[oldpos].c->pt = oldpos;
@@ -289,21 +288,19 @@ void tree_update_gravity_data(){
 #endif // GRAVITY_TREE
 
 void tree_update(){
-
-  if (tree_root==NULL){
-    tree_root = calloc(root_nx*root_ny*root_nz,sizeof(struct cell*));
-  }
-
-  for(int i=0;i<root_n;i++){
+	if (tree_root==NULL){
+		tree_root = calloc(root_nx*root_ny*root_nz,sizeof(struct cell*));
+	}
+	for(int i=0;i<root_n;i++){
 
 #ifdef MPI
-    if (communication_mpi_rootbox_is_local(i)==1){
+		if (communication_mpi_rootbox_is_local(i)==1){
 #endif // MPI
-      tree_root[i] = tree_update_cell(tree_root[i]);
+			tree_root[i] = tree_update_cell(tree_root[i]);
 #ifdef MPI
-    }
+		}
 #endif // MPI
-  }
+	}
 }
 
 

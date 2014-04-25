@@ -56,6 +56,7 @@ void input_append_input_arguments_with_double(const char* argument, double value
 	strcat(input_arguments,addition);
 }
 
+
 int input_check_restart(int argc, char** argv){
 
   char directoryname[1024];
@@ -66,7 +67,7 @@ int input_check_restart(int argc, char** argv){
   optind = 1;
 
   static char *datadir_path;
-  datadir_path = getenv("REBOUND_DATA");
+  datadir_path = getenv("REBOUND_DATA");    
 
   while (1) {
     static struct option long_options[] = {
@@ -90,24 +91,26 @@ int input_check_restart(int argc, char** argv){
 	strcpy(datafilename, optarg);
 	break;
       case 'i':
-	restart = 1;
 	sprintf(name, "%s", optarg);
-	
 	sprintf(datafilename, "%s/%s/snapshots/0000000.00[orb].binall",datadir_path,name);
-	sprintf(directoryname, "%s/data/%s",datadir_path,name);
-	/* read_params(datafilename); */
-	input_binary_all(datafilename);
-	/* input_binary(datafilename); */
+	sprintf(directoryname, "%s/%s",datadir_path,name);
+	/* FILE* inf; */
+	/* if((inf=fopen(filename_mpi,"rb")==NULL){ */
+	/*   } */
+	/* fclose(inf); */
+	read_params(datafilename);
+	printf("read.\n");
+	restart = 1;
+	strcpy(datafilename, optarg);
+	input_binary(datafilename);
 	break;
       default:
 	break;
       }
   }
-
-  /* if (restart==1){ */
-  /*   input_binary(datafilename); */
-  /* } */
-
+  if (restart==1){
+    input_binary(datafilename);
+  }
   return restart;
 }
 
@@ -187,7 +190,7 @@ void input_binary(char* filename){
   if(filesize != sizeof(int)+sizeof(double)+_N*sizeof(struct particle)){
     printf("sizeof(file):%d. sizeof(int)+sizeof(double)+%d*sizeof(particle)=%ld\n",
 	   filesize,_N,sizeof(int)+sizeof(double)+_N*sizeof(struct particle));
-    /* exit_simulation = 1; */
+    exit_simulation = 1;
   }
 
 #ifdef MPI
@@ -198,9 +201,9 @@ void input_binary(char* filename){
   for (int i=0;i<_N;i++){
     struct particle p;
 
-    /* if(i<10){ */
-    /*   printf("i:%d size(p):%ld before reading p:%ld\n",i,sizeof(struct particle), ftell(inf)); */
-    /* } */
+    if(i<10){
+      printf("i:%d size(p):%ld before reading p:%ld\n",i,sizeof(struct particle), ftell(inf));
+    }
 
     objects += fread(&p,sizeof(struct particle),1,inf);
     particles_add(p);
@@ -215,9 +218,6 @@ void input_binary_all(char *filename){
 
   int filesize = 0;
   FILE* inf = fopen(filename,"rb"); 
-  if(inf==NULL){
-    printf("cannot read %s.end.\n", filename); exit(1);
-  }
 
   // Get binary file size
   fseek(inf, 0, SEEK_END); 
@@ -230,43 +230,15 @@ void input_binary_all(char *filename){
   objects += fread(&t,sizeof(double),1,inf);
 
   // Show warnings when file of binary file is imconpatible. 
-  if(filesize != sizeof(int)+sizeof(double)+_N*sizeof(struct particle)+sizeof(struct boxinfo)){
+  if(filesize != sizeof(int)+sizeof(double)+_N*sizeof(struct particle)){
     printf("sizeof(file):%d. sizeof(int)+sizeof(double)+%d*sizeof(particle)=%ld\n",
-	   filesize,_N,sizeof(int)+sizeof(double)+_N*sizeof(struct particle)+sizeof(struct boxinfo));
-    /* exit_simulation = 1; */
+	   filesize,_N,sizeof(int)+sizeof(double)+_N*sizeof(struct particle));
+    exit_simulation = 1;
   }
 
-  printf("readinf filename %s. _N:%d N:%d\n",filename,_N,N);
-
-  for (int i=0;i<_N;i++){
-
-    struct particle p;
-
-    /* if(i<10){ */
-    /*   printf("i:%d size(p):%ld before reading p:%ld\n",i,sizeof(struct particle), ftell(inf)); */
-    /* } */
-
-    objects += fread(&p,sizeof(struct particle),1,inf);
-    particles_add(p);
-  }
-
-  printf("ftell:%ld\n", ftell(inf));
-
-  for(int i=0;i<1;i++){
-    printf("particle[%d].xyz:%lf %lf %lf\n", i,particles[i].x,particles[i].y,particles[i].z);
-  }
-
-  fread(&boxinfo,sizeof(struct boxinfo),1,inf);
-
-  fclose(inf);
-
-  boxinfo_expand();  
-
-  printf("hoge:");
-  printf("particles[0]:%lf %lf %lf\n", particles[0].x,particles[0].y,particles[0].z);
-
-  /* printf("function %s incomplete.end.\n", __func__);exit(1); */
+  printf("function %s incomplete.end.\n", __func__);exit(1);
 
 }
+
 
 

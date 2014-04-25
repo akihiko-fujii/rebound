@@ -3,9 +3,6 @@
 #include <math.h>
 #include <getopt.h>
 #include "particle.h"
-#include "collision_resolve.h"
-#include "boundaries.h"
-#include "collisions.h"
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -18,9 +15,7 @@
 int N; int dim1,dim2;		/* autocorrelation resolution */
 extern double boxsize_x,boxsize_y,boxsize_z,G,dt,softening,OMEGA;
 extern double resolution_x,resolution_y;
-extern enum collisions_restitution_model collisions_restitution_model_info; /* collision model */
-extern double constant_coefficient_of_restitution;
-extern double input_interval;
+enum collisions_restitution_model collisions_restitution_model_info; /* collision model */
 
 struct particle* particles;
 
@@ -60,9 +55,9 @@ double p2d_surfacedensity(){
   
 /* } */
 
-void help_show(){
+  void help_show(){
 
-  printf("this is the help for command.\n");
+printf("this is the help for command.\n");
 
 }
 
@@ -74,8 +69,7 @@ static struct option long_opt[] = {
   /* {"filename", required_argument, NULL, 'f'}, */
     {"id", required_argument, NULL, 'i'},
       {"resolution_x", required_argument, NULL, 'x'},
-  {"resolution_y", required_argument, NULL, 'y'},
-  {"input_interval", required_argument, NULL, 't'},
+	{"resolution_y", required_argument, NULL, 'y'},
     {0,0,0,0}
 };
 
@@ -86,6 +80,7 @@ void read_args(int argc, char *argv[]){
 	   ANSI_COLOR_RED
 	   "need at least one option. see -h for help.\n" ANSI_COLOR_RESET); exit(0);
   }
+
   static char *datadir_path;
   datadir_path = getenv("REBOUND_DATA");    
 
@@ -190,4 +185,3 @@ void read_args(int argc, char *argv[]){
 /*     ); */
 /* } */
  
-

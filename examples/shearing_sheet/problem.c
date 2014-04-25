@@ -93,12 +93,12 @@ void problem_init(int argc, char* argv[]){
   root_nx = 2; root_ny = 2; root_nz = 1;
   nghostx = 2; nghosty = 2; nghostz = 0; 			// Use two ghost rings
 
-  double surfacedensity 	= 840.; 			// kg/m^2
+  double surfacedensity 	= 1080.; 			// kg/m^2
   double particle_density	= 900.;			// kg/m^3
   double particle_radius_min 	= 1.;			// m
   double particle_radius_max 	= 1.;			// m
   double particle_radius_slope 	= -3.;	
-  boxsize 			= 83./2.;			// m
+  boxsize 			= 149./2.;			// m
  
   if (argc>1){						// Try to read boxsize from command line
     boxsize = atof(argv[1]);

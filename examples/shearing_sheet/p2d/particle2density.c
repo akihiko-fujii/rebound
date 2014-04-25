@@ -50,14 +50,14 @@ struct particle projection(struct particle p){
 
 void compute_density(){
 
-  arraysize_x = (int)(boxsize_x / resolution_x) + 2;
-  arraysize_y = (int)(boxsize_y / resolution_y) + 2;
+  arraysize_x = boxsize_x / resolution_x + 1;
+  arraysize_y = boxsize_y / resolution_y + 1;
 
   densitymap = (double **)calloc(arraysize_x,sizeof(double*));
 
   int i;
-  for(i=0;i<arraysize_y;i++){
-    densitymap[i] = (double *)calloc(arraysize_x,sizeof(double));
+  for(i=0;i<arraysize_x;i++){
+    densitymap[i] = (double *)calloc(arraysize_y,sizeof(double));
   }
 
   double resolution_area = resolution_x*resolution_y;
@@ -66,6 +66,7 @@ void compute_density(){
 
     double _x,_y;
     struct particle p_proj = projection(particles[i]);
+    /* struct particle p_proj = particles[i]; */
 
     if(p_proj.x<-boxsize_x/2.) p_proj.x += boxsize_x;    if(p_proj.y<-boxsize_y/2.) p_proj.y += boxsize_y;
     if(p_proj.x> boxsize_x/2.) p_proj.x -= boxsize_x;    if(p_proj.y> boxsize_y/2.) p_proj.y -= boxsize_y;
@@ -76,7 +77,13 @@ void compute_density(){
     if(0<=(int)_x && (int)_x <=arraysize_x && 0<=(int)_y && (int)_y<=arraysize_y){
       densitymap[(int)_x][(int)_y] += p_proj.m/resolution_area;
     }else{
-      printf("particle %d out of range. exits at %s %d %s.\n",i,__FILE__,__LINE__,__func__);  exit(1);
+      /* if(0>_x || 0>_y ){ */
+      /* 	printf("x,y:%lf %lf arraysize:%d %d\nm", _x,_y,arraysize_x,arraysize_y); exit(1); */
+      /* } */
+      /* if((int)_x > arraysize_x || (int)_y>arraysize_y){ */
+      /* 	printf("x,y:%lf %lf arraysize:%d %d\n", _x,_y,arraysize_x,arraysize_y);exit(1); */
+      /* } */
+      printf("particle %d out of range. at %s %d %s. end.\n",i,__FILE__,__LINE__,__func__);  exit(1);
     }
   }
 }
@@ -88,7 +95,7 @@ void write_density(){
   sprintf(o,"%s/densitymap[%dx%d]",directoryname,arraysize_x,arraysize_y);
   mkdir(o, S_IRWXU | S_IRWXG | S_IRWXO);
   sprintf(o2, "%s/%010.2f[orb].surfacedensity",o,input_interval/(2.*M_PI/OMEGA)*serialnumber);
-
+  
   FILE *of; 
   if((of=fopen(o2, "w"))==NULL){
     printf("cannot open file %s from function %s.\n", o2,__func__); exit(1);
@@ -128,8 +135,6 @@ int main(int argc, char **argv) {
 
   read_args(argc,argv);
 
-  /* printf("Input interval set to %lf orbital periods)\n",input_interval); */
-
   read_params(datafilename);
 
   input_interval = 0.01*2.*M_PI/OMEGA;
@@ -162,8 +167,6 @@ int main(int argc, char **argv) {
   sprintf(dir,"%s/densitymap[%dx%d]",directoryname,arraysize_x,arraysize_y);
   sprintf(o, "echo | awk -f ./p2d/density_gnuplot.awk > %s/gnuplot.plt",dir);
   system(o);
-
-  free(densitymap);
 
   return 0;
 }

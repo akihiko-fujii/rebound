@@ -3,7 +3,7 @@
  * @brief 	Particle structure and main particle routines.
  * @author 	Hanno Rein <hanno@hanno-rein.de>
  * 
- * @section 	LCENSE
+ * @section 	LICENSE
  * Copyright (c) 2011 Hanno Rein, Shangfei Liu
  *
  * This file is part of rebound.
@@ -59,7 +59,6 @@ void particles_add_local(struct particle pt){
 	}
 #endif // BOUNDARIES_OPEN
 	while (Nmax<=N){
-	  printf("hereis called.N:%d,Nmax:%d\n",N,Nmax);
 		Nmax += 128;
 		particles = realloc(particles,sizeof(struct particle)*Nmax);
 	}

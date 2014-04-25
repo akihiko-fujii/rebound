@@ -30,7 +30,6 @@
 #include <string.h>
 #include <sys/time.h>
 #include "particle.h"
-#include "collision_resolve.h"
 #include "main.h"
 #include "tools.h"
 #include "output.h"
@@ -132,8 +131,7 @@ void output_timing(){
 #endif // BOUNDARIES_SHEAR
 	printf("cpu= %- 9f [s]  ",temp-output_timing_last);
 	if (tmax>0){
-	  /* printf("ttttt:%lf\n", t);exit(1); */
-	  printf("dt:%lf t:%lf,tmax:%lf\n,t/tmax= %5.2f%%",dt,t,tmax,t/tmax*100.0);
+		printf("t/tmax= %5.2f%%",t/tmax*100.0);
 	}
 #ifdef PROFILING
 	printf("\nCATEGORY       TIME \n");
@@ -318,6 +316,8 @@ void boxinfo_prepare(){
   /* boxinfo.particle_radius_max			= particle_radius_max; */
   /* boxinfo.particle_radius_slope			= particle_radius_slope; */
   /* boxinfo.coefficient_of_restitution_strlen	= strlen(); */
+  
+
 }
 
 void output_binary_all(char* filename){

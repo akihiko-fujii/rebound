@@ -109,8 +109,4 @@ void tools_move_to_center_of_momentum();
  */
 struct particle tools_get_center_of_mass(struct particle p1, struct particle p2);
 
-double tools_crosssection();
-
-double tools_surfacedensity();
-
 #endif 	// TOOLS_H

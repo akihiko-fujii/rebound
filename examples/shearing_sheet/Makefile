@@ -4,7 +4,7 @@ export OPT=-O3
 export OPENGL=1
 export LIBPNG=0
 export OUTPUT=1
-export USEGLUT=1
+export USEGLUT=0
 export MPI=0
 
 all:
