@@ -1,0 +1,1 @@
+{for(i=0.0;i<=20.0;i+=0.1){ printf("splot \"%010.2lf[orb].surfacedensity\" u 1:2:3 \n",i)} }

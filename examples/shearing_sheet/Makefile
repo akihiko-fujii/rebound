@@ -7,6 +7,9 @@ export OUTPUT=1
 export USEGLUT=0
 export MPI=0
 
+P2DDIR = p2d
+MISCDIR = misc
+
 all:
 	# Setup link to different modules
 	ln -fs gravity_tree.c ../../src/gravity.c
@@ -17,16 +20,20 @@ all:
 	ln -fs ../$(PROBLEMDIR)/problem.c ../../src/problem.c
 	# Compile
 	$(MAKE) -C ../../src/
+	$(MAKE) -C ./$(P2DDIR)/
+	$(MAKE) -C ./$(MISCDIR)/
 	# Copy result
 	cp ../../src/nbody .
-	$(MAKE) -C ./p2d/
-	cp ./p2d/*.out .
-	rm ./p2d/*.out
+	cp ./$(P2DDIR)/*.out .
+	rm ./$(P2DDIR)/*.out
+	cp ./$(MISCDIR)/*.out .
+	rm ./$(MISCDIR)/*.out
 doc: all
 	$(MAKE) -C ../../src/ doc
 
 clean:
 	$(MAKE) -C ../../src/ clean
-	$(MAKE) -C ./p2d/ clean
+	$(MAKE) -C ./$(P2DDIR)/ clean
+	$(MAKE) -C ./$(MISCDIR)/ clean
 	rm -vf nbody
-	rm *.outg
+	rm *.out

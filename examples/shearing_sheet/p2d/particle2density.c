@@ -17,8 +17,6 @@ static unsigned int total = 0;
 char *datafilename, *directoryname;
 double boxsize_x,boxsize_y,boxsize_z,G,dt,softening,OMEGA;
 double resolution_x,resolution_y;
-int N;
-
 
 double input_interval;
 int serialnumber = 0;
@@ -144,9 +142,10 @@ int main(int argc, char **argv) {
     sprintf(datafilename, "%s/snapshots/%010.2lf[orb].binall",
 	    directoryname,input_interval/(2.*M_PI/OMEGA)*(double)serialnumber);
 
-    printf("reading %s resolution:%lf %lf\n", datafilename, resolution_x,resolution_y);
+    printf("reading %s resolution:%lf %lf\n",datafilename,resolution_x,resolution_y);
 
     up(1);
+
     read_params(datafilename);
 
     /* printf("dirfilename:%s\n", directoryname); */
@@ -156,11 +155,12 @@ int main(int argc, char **argv) {
     write_density();
 
     serialnumber++;
+
     if(serialnumber>1000) break;
 
     /* free(densitymap); */
-
   }
+
   printf("average density:%lf\n", density_average());
 
   char o[1024],dir[1024];
