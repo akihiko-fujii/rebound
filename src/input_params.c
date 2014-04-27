@@ -14,6 +14,7 @@ extern double OMEGA;
 enum collisions_restitution_model collisions_restitution_model_info; /* collision model */
 double constant_coefficient_of_restitution;
 extern int exit_simulation;
+extern int N;
 
 double crosssection(){
   double s = 0.;

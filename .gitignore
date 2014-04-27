@@ -5,7 +5,7 @@ glfw3.h
 examples/shearing_sheet/tmp/*
 examples/restarting_simulation/data/
 #Makefile@
-*/#*
+#Makefile
 .#*
 #*
 *~
