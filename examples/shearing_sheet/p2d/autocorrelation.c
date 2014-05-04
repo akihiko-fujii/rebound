@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
 {
 
   resolution_x = 1.;   resolution_y = 1.; /* set as default */
+
   resolution_theta = 1.;   resolution_radial = 5.; /* set as default */
 
   read_args(argc,argv);
@@ -175,8 +176,9 @@ int main(int argc, char *argv[])
 
     read_params(datafilename);
 
-    printf("particle[%d]:%lf %lf %lf\n", 0,particles[0].x,particles[0].y,particles[0].z);
-    printf("reading %s resolution:%lf %lf\n", datafilename, resolution_x,resolution_y);
+    printf("particle[%d]:%lf %lf %lf\n",0,particles[0].x,particles[0].y,particles[0].z);
+
+    printf("reading %s resolution:%lf %lf\n",datafilename,resolution_x,resolution_y);
 
     compute_autocorrelation();
 
