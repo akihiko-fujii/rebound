@@ -54,12 +54,24 @@ struct particle pair(struct particle p1, struct particle p2){
 }
 
 
-void compute_autocorrelation(){
+void reset_autocorrelation(){
 
   int i,j;
 
-  arraysize_x = (int)(boxsize_x*0.2 / resolution_x) + 2;
-  arraysize_y = (int)(boxsize_y*0.2 / resolution_y) + 2;
+  for(i=0;i<arraysize_x;i++){
+    for(j=0;j<arraysize_y;j++){
+      autocorrelation[i][j] = 0.;
+    }
+  }
+}
+
+void compute_autocorrelation(){
+
+  int i,j;
+  double scalex = 0.8; double scaley = 0.8;
+
+  arraysize_x = (int)(boxsize_x*scalex / resolution_x) + 2;
+  arraysize_y = (int)(boxsize_y*scaley / resolution_y) + 2;
 
   arraysize_theta = (int)(360. / resolution_theta) + 2;
   arraysize_radial = (int)(boxsize_y+boxsize_x / resolution_radial) + 2;
@@ -76,17 +88,12 @@ void compute_autocorrelation(){
     for(i=0;i<arraysize_radial;i++){
       polar[i] = (double *)calloc(arraysize_theta,sizeof(double));
     }
-  }
-
-  for(i=0;i<arraysize_x;i++){
-    for(j=0;j<arraysize_y;j++){
-      autocorrelation[i][j] = 0.;
-    }
+    reset_autocorrelation();
   }
 
   double resolution_area = resolution_x*resolution_y;
 
-  for(i=0;i<1000;i++){
+  for(i=0;i<200;i++){
     up(1);printf("i=%d\n", i);
     for(j=0;j<N;j++){
 
@@ -97,8 +104,8 @@ void compute_autocorrelation(){
       if(p_proj.x> boxsize_x/2.) p_proj.x -= boxsize_x;    if(p_proj.y> boxsize_y/2.) p_proj.y -= boxsize_y;
 
       /* calculate autocorrelation in cartesian coordinate. */
-      _x	= floor((p_proj.x+boxsize_x/2.)/resolution_x);
-      _y	= floor((p_proj.y+boxsize_y/2.)/resolution_y);
+      _x	= floor((p_proj.x+boxsize_x/2.*scalex)/resolution_x);
+      _y	= floor((p_proj.y+boxsize_y/2.*scaley)/resolution_y);
 
       /* printf("_x:%lf _y:%lf\n", _x,_y); */
       if(0<=(int)_x && (int)_x <arraysize_x && 0<=(int)_y && (int)_y<arraysize_y){
@@ -182,9 +189,15 @@ int main(int argc, char *argv[])
 
     compute_autocorrelation();
 
-    write_autocorrelation();
-
     serialnumber++;
+
+    /* if(!(serialnumber%2)){ */
+  
+      write_autocorrelation();
+
+      reset_autocorrelation();
+
+    /* } */
 
     if(serialnumber>1000) break;
 
