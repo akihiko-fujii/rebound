@@ -228,13 +228,13 @@ void problem_output(){
 	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA));
     output_binary_all(o);
 
-    sprintf(o,"%s/%s/snapshots/%010.2f[orb].bin",
-	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA));
-    output_binary(o);
+    /* sprintf(o,"%s/%s/snapshots/%010.2f[orb].bin", */
+    /* 	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA)); */
+    /* output_binary(o); */
 
-    sprintf(o,"%s/%s/snapshots/%010.2f[orb].ascii",
-	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA));
-    output_ascii(o);
+    /* sprintf(o,"%s/%s/snapshots/%010.2f[orb].ascii", */
+    /* 	    datadir_path,simulation_id,t/(2.*M_PI/OMEGA)); */
+    /* output_ascii(o); */
 
     free(o);
   }
