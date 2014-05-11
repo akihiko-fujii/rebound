@@ -126,6 +126,10 @@ int read_params(char *filename){
   	 );
 #endif
 
+#ifdef INTEGRATOR_SEI 	// Shearing sheet
+  printf("OMEGA:%lf\n", OMEGA);
+#endif
+
   return 0;
 }
  
