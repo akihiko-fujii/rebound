@@ -20,6 +20,7 @@ int N;
 int once=1;
 double input_interval;
 int serialnumber = 0;
+int max_number_of_pairs = -1;	/* used for autocorrelation.c */
 
 double t1 = 0.; double tt1 = 0.1;
 double mean=0.; double var=0.; double stdd=0.; /* average, variance & standard deviation for vx */
@@ -65,7 +66,9 @@ void out_velocity_dispersion(){
     printf("cannot open file %s from function %s.\n", o2,__func__); exit(1);
   }
 
-  fprintf(of, "%lf %.9lf %.9lf %.9lf %lf\n",t1,mean,var,stdd,stdd/c_critical);
+  if(once) {fprintf(of,"# time, mean, var, stdd, stdd/c_critical\n");}
+
+    fprintf(of, "%lf %.9lf %.9lf %.9lf %lf\n",t1,mean,var,stdd,stdd/c_critical);
 
   fclose(of);
 }

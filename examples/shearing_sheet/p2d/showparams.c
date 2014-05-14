@@ -15,6 +15,7 @@
 char *datafilename, *directoryname;
 double boxsize_x,boxsize_y,boxsize_z,G,dt,softening,OMEGA;
 double resolution_x,resolution_y;
+int max_number_of_pairs = -1;	/* used for autocorrelation.c */
 
 double t1 = 0.; double tt1 = 0.1;
 

@@ -1,7 +1,7 @@
 PROBLEMDIR=$(shell basename `dirname \`pwd\``)"/"$(shell basename `pwd`)
 export PROFILING=0
 export OPT=-O3 
-export OPENGL=1
+export OPENGL=0
 export LIBPNG=0
 export OUTPUT=1
 export USEGLUT=0

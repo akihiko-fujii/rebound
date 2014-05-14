@@ -21,6 +21,7 @@ struct particle* particles;
 
 extern char *datafilename;
 extern char *directoryname;
+extern int max_number_of_pairs;
 
 double p2d_crosssection(){
   double s = 0.;
@@ -86,7 +87,7 @@ void read_args(int argc, char *argv[]){
 
   int option_index = -11;   
 
-  while((result = getopt_long(argc, argv, "hi:x:y:", long_opt, &option_index))!=-1){
+  while((result = getopt_long(argc, argv, "hi:x:y:p:", long_opt, &option_index))!=-1){
 
     /* printf("result = %d\n", result); */
 
@@ -100,6 +101,9 @@ void read_args(int argc, char *argv[]){
       /*     datafilename = calloc(1024, sizeof(char)); */
       /*     sprintf(datafilename, "%s", name); */
       /*     break; */
+    case 'p':
+      max_number_of_pairs = atof(optarg);
+      break;
     case 'x':
       resolution_x = atof(optarg);
       break;

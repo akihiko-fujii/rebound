@@ -22,6 +22,7 @@ double input_interval;
 int serialnumber = 0;
 double **densitymap;
 int arraysize_x,arraysize_y;
+int max_number_of_pairs = -1;	/* used for autocorrelation.c */
 
 int sum(const char *fpath, const struct stat *sb, int typeflag) {
 

@@ -32,6 +32,7 @@ int arraysize_x,arraysize_y;
 int arraysize_theta,arraysize_radial;
 
 int once = 1;
+int max_number_of_pairs = 10000000;
 
 void readfile(char *filename);
 
@@ -108,9 +109,17 @@ void compute_autocorrelation(){
 
   double resolution_area = resolution_x*resolution_y;
 
-  for(i=0;i<20;i++){
-    up(1);printf("i=%d\n", i);
+  int number_of_pairs = 0;
+
+  for(i=0;i<N;i++){
+    /* up(1); printf("number of pairs:%d\n",number_of_pairs); */
+    /* check if one of the particle pair is inside halfbox sphere.  */
+    double center2 = particles[i].x*particles[i].x + particles[i].y*particles[i].y + particles[i].z*particles[i].z;
+    if(center2>boxsize_x*boxsize_x/4.) continue;
+
     for(j=0;j<N;j++){
+
+      if(number_of_pairs>max_number_of_pairs){ i=N; break;}
 
       double _x,_y; double _theta,_radial;
       struct particle p_proj = pair(particles[i],particles[j]);
@@ -124,6 +133,9 @@ void compute_autocorrelation(){
 
       /* printf("_x:%lf _y:%lf\n", _x,_y); */
       if(0<=(int)_x && (int)_x <arraysize_x && 0<=(int)_y && (int)_y<arraysize_y){
+
+	number_of_pairs ++ ;
+
 	/* autocorrelation[(int)_x][(int)_y] += p_proj.m/resolution_area; */
 	autocorrelation[(int)_x][(int)_y] ++;
       }else{
@@ -134,7 +146,6 @@ void compute_autocorrelation(){
       }
 
       /* continue; 		/\* @TODO boxsize issue for theta & radial array *\/ */
-
       double scale_radial = 10.;
 
       /* calculate autocorrelation in polar coordinate. */
@@ -155,9 +166,7 @@ void compute_autocorrelation(){
 
     } /* j */
   }   /* i */
-
 }
-
 
 void compute_cumulative_polar();
 
@@ -176,7 +185,8 @@ void write_autocorrelation(){
   int i,j;
   for(int i=0;i<arraysize_x;i++){
     for(int j=0;j<arraysize_y;j++){
-      fprintf(of, "%lf %lf %lf\n", (i-.5*arraysize_x)*resolution_x,(j-.5*arraysize_y)*resolution_y,autocorrelation[i][j]);      
+      fprintf(of, "%lf %lf %lf\n",
+	      (i-.5*arraysize_x)*resolution_x,(j-.5*arraysize_y)*resolution_y,autocorrelation[i][j]);      
     }
     fprintf(of, "\n");
   }
@@ -184,10 +194,10 @@ void write_autocorrelation(){
   fclose(of);
 
   /* write polar autocorrelation. */
-  sprintf(o2, "%s/%010.2f[orb].polarauorrelation_tr",o,input_interval/(2.*M_PI/OMEGA)*serialnumber);
+  sprintf(o2, "%s/%010.2f[orb].polarautocorrelation_tr",o,input_interval/(2.*M_PI/OMEGA)*serialnumber);
 
   if((of=fopen(o2, "w"))==NULL){
-    printf("cannot open file %s from function %s.\n", o2,__func__); exit(1);
+    printf("cannot open file %s from function %s.\n",o2,__func__); exit(1);
   }
 
   for(int i2=arraysize_theta*1/4;i2<arraysize_theta*5/4;i2++){
@@ -244,9 +254,28 @@ void compute_cumulative_polar(){
       }
     }}
 
+
+}
+
+void max_autocorrelation(){
+
+  int i,j;
+
   /* find maximum angle. */
   for(j=0;j<arraysize_radial;j++){
-   double max = -1.; int argument = -23;
+    double max = -1.; int argument = -1;
+
+    for(i=0.5*arraysize_theta;i<arraysize_theta;i++){
+      if(polar[i][j]>max){max=polar[i][j];argument=i;}
+    }
+
+    /* printf("argument:%d\n",argument); */
+    polar[argument][j] = -100.;
+  }
+
+  /* find maximum angle. */
+  for(j=0;j<arraysize_radial;j++){
+    double max = -1.; int argument = -1;
 
     for(i=0.5*arraysize_theta;i<arraysize_theta;i++){
       if(cumul_polar[i][j]>max){max=cumul_polar[i][j];argument=i;}
@@ -262,7 +291,7 @@ int main(int argc, char *argv[]){
 
   resolution_x = 1.;   resolution_y = 1.; /* set as default */
 
-  resolution_theta = M_PI/180.*0.2;   resolution_radial = 5.; /* set as default */
+  resolution_theta = M_PI/180.*0.5;   resolution_radial = 5.; /* set as default */
 
   read_args(argc,argv);
 
@@ -287,7 +316,9 @@ int main(int argc, char *argv[]){
 
     serialnumber++;
 
-    if(!(serialnumber%20)){
+    if(!(serialnumber%5)){
+
+      /* max_autocorrelation(); */
   
       write_autocorrelation();
 
