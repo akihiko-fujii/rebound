@@ -90,6 +90,7 @@ void compute_density(){
 void write_density(){
 
   char o[1024],o2[1024];
+
   /* prepare data directory */
   sprintf(o,"%s/densitymap[%dx%d]",directoryname,arraysize_x,arraysize_y);
   mkdir(o, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -103,13 +104,11 @@ void write_density(){
   int i,j;
   for(int i=0;i<arraysize_x;i++){
     for(int j=0;j<arraysize_y;j++){
-      fprintf(of, "%lf %lf %lf\n", i*resolution_x,j*resolution_y,densitymap[i][j]);      
-    }
+      fprintf(of, "%lf %lf %lf\n", i*resolution_x,j*resolution_y,densitymap[i][j]);       }
     fprintf(of, "\n");
   }
 
   fclose(of);
-
 }
 
 double density_average(){
@@ -157,9 +156,9 @@ int main(int argc, char **argv) {
 
     serialnumber++;
 
-    if(serialnumber>1000) break;
+    if(serialnumber>4000) break;
 
-    /* free(densitymap); */
+    free(densitymap);
   }
 
   printf("average density:%lf\n", density_average());

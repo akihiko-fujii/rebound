@@ -135,9 +135,9 @@ void compute_autocorrelation(){
       if(0<=(int)_x && (int)_x <arraysize_x && 0<=(int)_y && (int)_y<arraysize_y){
 
 	number_of_pairs ++ ;
-
 	/* autocorrelation[(int)_x][(int)_y] += p_proj.m/resolution_area; */
 	autocorrelation[(int)_x][(int)_y] ++;
+
       }else{
 	/* printf("particle %d (%lf,%lf) out of range(0:%d)(0:%d).\nexit from %s %d %s.\n", */
 	/*        i,_x,_y,arraysize_x,arraysize_y, */
@@ -257,34 +257,65 @@ void compute_cumulative_polar(){
 
 }
 
+double surfacedensity_acr(){
+
+  double sigma = 0.;
+  for(int i=0;i<N;i++){
+    sigma += particles[i].m;
+}
+  sigma = sigma / (boxsize_x*boxsize_y);
+  return sigma;
+}
+
 void max_autocorrelation(){
 
   int i,j;
 
+  /* /\* find maximum angle. *\/ */
+  /* for(j=0;j<arraysize_radial;j++){ */
+  /*   double max = -1.; int argument = -1; */
+
+  /*   for(i=0.5*arraysize_theta;i<arraysize_theta;i++){ */
+  /*     if(polar[i][j]>max){max=polar[i][j];argument=i;} */
+  /*   } */
+
+  /*   /\* printf("argument:%d\n",argument); *\/ */
+  /*   polar[argument][j] = -100.; */
+  /* } */
+
+  char o[1024],o2[1024];
+  /* prepare data directory */
+  sprintf(o,"%s/autocorrelation[%dx%d]",directoryname,arraysize_x,arraysize_y);
+  sprintf(o2, "%s/%010.2f[orb].pitchangle",o,input_interval/(2.*M_PI/OMEGA)*serialnumber);
+  FILE *of; 
+  if((of=fopen(o2, "w"))==NULL){
+    printf("cannot open file %s from function %s.\n", o,__func__); exit(1);
+  }
+  
+  fprintf(of,"# radial distance, pitch angle, autoc. inclination, Toomre wavelength\n");
   /* find maximum angle. */
+
+  double sigma = surfacedensity_acr();
+
   for(j=0;j<arraysize_radial;j++){
-    double max = -1.; int argument = -1;
+    double max_cumul = -1.; int argument_cumul = -1;
+    double max_polar = -1.; int argument_polar = -1;
 
     for(i=0.5*arraysize_theta;i<arraysize_theta;i++){
-      if(polar[i][j]>max){max=polar[i][j];argument=i;}
+      if(cumul_polar[i][j]>max_cumul){max_cumul=cumul_polar[i][j];argument_cumul=i;}
+      if(polar[i][j]>max_polar){max_polar=polar[i][j];argument_polar=i;}
     }
 
     /* printf("argument:%d\n",argument); */
-    polar[argument][j] = -100.;
+    /* cumul_polar[argument][j] = 10000.; */
+    fprintf(of,"%lf %lf %lf %lf\n",
+	    resolution_radial*j,
+	    argument_cumul*resolution_theta*180./M_PI,
+	    argument_polar*resolution_theta*180./M_PI,
+	    2.*M_PI*M_PI*sigma/OMEGA/OMEGA*G);
   }
 
-  /* find maximum angle. */
-  for(j=0;j<arraysize_radial;j++){
-    double max = -1.; int argument = -1;
-
-    for(i=0.5*arraysize_theta;i<arraysize_theta;i++){
-      if(cumul_polar[i][j]>max){max=cumul_polar[i][j];argument=i;}
-    }
-
-    /* printf("argument:%d\n",argument); */
-    cumul_polar[argument][j] = 10000.;
-  }
-
+  fclose(of);
 }
 
 int main(int argc, char *argv[]){
@@ -316,9 +347,9 @@ int main(int argc, char *argv[]){
 
     serialnumber++;
 
-    if(!(serialnumber%5)){
+    if(!(serialnumber%20)){
 
-      /* max_autocorrelation(); */
+      max_autocorrelation();
   
       write_autocorrelation();
 
